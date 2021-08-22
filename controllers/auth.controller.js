@@ -9,9 +9,7 @@ const { generarJWT } = require('../helpers/jwt')
 const createUser = async (req, res = response) => {
 
     const { name, email, password } = req.body;
-
  
-        
     try {
          
       //Verificar se naoa existe o email
@@ -54,23 +52,61 @@ const createUser = async (req, res = response) => {
 }
 
 
-const loginUser = (req, res = response) => {
+const loginUser = async (req, res = response) => {
 
     const { email, password } = req.body;
 
-    return res.json({
-        ok: true,
-        msg: 'Login de usuario'
-    })
+    try {
+
+        const dbUser = await User.findOne({ email: email });
+
+        if ( !dbUser ) {
+            return res.status(400).json({
+                ok: false,
+                msg: 'Algo deu errado por favor tente novamente'
+            });
+        }
+
+        const validPassword = bcrypt.compareSync(password, dbUser.password);
+        
+        if ( !validPassword ) {
+            return res.status(400).json({
+                ok: false,
+                msg: 'Algo deu errado por favor tente novamente'
+            });
+        }
+
+        //Generar JWT
+        const token = await generarJWT(dbUser.id, dbUser.name);
+        
+        return res.status(201).json({
+            ok: true,
+            uid: dbUser.id,
+            name: dbUser.name,
+            token
+        })
+        
+    } catch (error) {
+        console.log(error);
+
+        return res.json({
+            ok: true,
+            msg: 'Login de usuario'
+        });
+    }
 
 }
 
 
-const revalidarToken = (req, res = response ) => {
-
+const revalidarToken = (req, res = response) => {
+    
+    const { uid, name } = req;
+   
     return res.json({
         ok: true,
-        msg: 'Revalidar token do usuario'
+        uid,
+        name
+     
     })
 
 }
