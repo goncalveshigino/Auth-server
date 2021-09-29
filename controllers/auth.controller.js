@@ -72,7 +72,7 @@ const loginUser = async (req, res = response) => {
         if ( !validPassword ) {
             return res.status(400).json({
                 ok: false,
-                msg: 'Algo deu errado por favor tente novamente'
+                msg: 'Palavra passe errada'
             });
         }
 
